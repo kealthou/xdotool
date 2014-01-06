@@ -1064,6 +1064,11 @@ int xdo_send_keysequence_window_list_do(const xdo_t *xdo, Window window, charcod
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
       keys[i].code = scratch_keycode;
+      KeySym lowercase, uppercase;
+      XConvertCase(keys[i].symbol, &lowercase, &uppercase);
+      if (lowercase != uppercase && keys[i].symbol == uppercase) {
+        keys[i].modmask |= ShiftMask;
+      }
       keymapchanged = 1;
     }
 
