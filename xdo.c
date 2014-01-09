@@ -48,7 +48,7 @@
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key);
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char32_t key);
 static void _xdo_charcodemap_from_char(const xdo_t *xdo, charcodemap_t *key);
 static void _xdo_charcodemap_from_keysym(const xdo_t *xdo, charcodemap_t *key, KeySym keysym);
 //static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key);
@@ -70,7 +70,7 @@ static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
 static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
 
 /* context-free functions */
-static wchar_t _keysym_to_char(KeySym keysym);
+static char32_t _keysym_to_char(KeySym keysym);
 
 /* Default to -1, initialize it when we need it */
 static Atom atom_NET_WM_PID = -1;
@@ -963,11 +963,13 @@ int xdo_enter_text_window(const xdo_t *xdo, Window window, const char *string, u
   setlocale(LC_CTYPE,"");
   mbstate_t ps = { 0 };
   ssize_t len;
-  while ( (len = mbsrtowcs(&key.key, &string, 1, &ps)) ) {
+
+  while ( (len = mbrtoc32(&key.key, string, MB_CUR_MAX, &ps)) ) {
     if (len == -1) {
       fprintf(stderr, "Invalid multi-byte sequence encountered\n");
       return XDO_ERROR;
     }
+    string += len;
     _xdo_charcodemap_from_char(xdo, &key);
     if (key.code == 0 && key.symbol == NoSymbol) {
       fprintf(stderr, "I don't what key produces '%lc', skipping.\n",
@@ -1230,7 +1232,7 @@ int xdo_find_window_client(const xdo_t *xdo, Window window, Window *window_ret,
 }
 
 /* Helper functions */
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char32_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1330,8 +1332,8 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 }
 
 /* context-free functions */
-wchar_t _keysym_to_char(KeySym keysym) {
-  return (wchar_t)xkb_keysym_to_utf32(keysym);
+char32_t _keysym_to_char(KeySym keysym) {
+  return (char32_t)xkb_keysym_to_utf32(keysym);
 }
 
 int _xdo_send_keysequence_window_to_keycode_list(const xdo_t *xdo, const char *keyseq,

@@ -12,7 +12,7 @@
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <uchar.h>
 
 /**
  * @mainpage
@@ -54,7 +54,7 @@
  * this key (keycode, modifiers, group, etc)
  */
 typedef struct charcodemap {
-  wchar_t key; /** the letter for this key, like 'a' */
+  char32_t key; /** the letter for this key, like 'a' */
   KeyCode code; /** the keycode that this key is on */
   KeySym symbol; /** the symbol representing this key */
   int group; /** the keyboard group that has this key in it */
